@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 
 function App() {
-  const API = "http://127.0.0.1:5000";
+  const API = "https://job-portal-yu7v.onrender.com";
 
   const [page, setPage] = useState("login");
   const [user, setUser] = useState(null);
