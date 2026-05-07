@@ -15,41 +15,72 @@ function App() {
   const [applications, setApplications] = useState([]);
   const [search, setSearch] = useState("");
 
+  const [authLoading, setAuthLoading] = useState(false);
+
   // LOGIN
   const login = async () => {
-    const res = await fetch(`${API}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (data.user_id) {
-      setUser(data);
-      setPage("jobs");
-      getJobs();
-    } else {
-      alert(data.message);
+    if (!email || !password) {
+      alert("Please fill all fields");
+      return;
     }
+
+    setAuthLoading(true);
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.user_id) {
+        setUser(data);
+        setPage("jobs");
+        getJobs();
+      } else {
+        alert(data.message);
+      }
+
+    } catch (err) {
+      alert("Server error");
+    }
+
+    setAuthLoading(false);
   };
 
   // REGISTER
   const register = async () => {
-    const res = await fetch(`${API}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        role: "user",
-      }),
-    });
+    if (!name || !email || !password) {
+      alert("Please fill all fields");
+      return;
+    }
 
-    const data = await res.json();
-    alert(data.message);
-    setPage("login");
+    setAuthLoading(true);
+
+    try {
+      const res = await fetch(`${API}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: "user",
+        }),
+      });
+
+      const data = await res.json();
+
+      alert(data.message);
+      setPage("login");
+
+    } catch (err) {
+      alert("Server error");
+    }
+
+    setAuthLoading(false);
   };
 
   // GET JOBS
@@ -82,7 +113,6 @@ function App() {
     setPage("applications");
   };
 
-  // FILTER
   const filteredJobs = jobs.filter(
     (job) =>
       job.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -94,36 +124,86 @@ function App() {
 
       <h1 className="title">Job Portal</h1>
 
-      {/* LOGIN */}
+      {/* ================= LOGIN ================= */}
       {page === "login" && (
         <div className="box">
+
           <h2>Login</h2>
 
-          <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <input
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-          <button onClick={login}>Login</button>
+          <input
+            type="password"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-          <p onClick={() => setPage("register")}>Create account</p>
+          <button onClick={login} disabled={authLoading}>
+
+            {authLoading ? (
+              <div className="btn-loading">
+                <div className="btn-spinner"></div>
+                Logging in...
+              </div>
+            ) : (
+              "Login"
+            )}
+
+          </button>
+
+          <p onClick={() => setPage("register")}>
+            Create account
+          </p>
+
         </div>
       )}
 
-      {/* REGISTER */}
+      {/* ================= REGISTER ================= */}
       {page === "register" && (
         <div className="box">
+
           <h2>Register</h2>
 
-          <input placeholder="Name" onChange={(e) => setName(e.target.value)} />
-          <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <input
+            placeholder="Name"
+            onChange={(e) => setName(e.target.value)}
+          />
 
-          <button onClick={register}>Register</button>
+          <input
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-          <p onClick={() => setPage("login")}>Already have account?</p>
+          <input
+            type="password"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button onClick={register} disabled={authLoading}>
+
+            {authLoading ? (
+              <div className="btn-loading">
+                <div className="btn-spinner"></div>
+                Creating account...
+              </div>
+            ) : (
+              "Register"
+            )}
+
+          </button>
+
+          <p onClick={() => setPage("login")}>
+            Already have account?
+          </p>
+
         </div>
       )}
 
-      {/* JOBS */}
+      {/* ================= JOBS ================= */}
       {page === "jobs" && (
         <div className="container">
 
@@ -131,8 +211,13 @@ function App() {
             <h2>Available Jobs</h2>
 
             <div>
-              <button onClick={getApplications}>Applied Jobs</button>
-              <button onClick={() => setPage("login")}>Logout</button>
+              <button onClick={getApplications}>
+                Applied Jobs
+              </button>
+
+              <button onClick={() => setPage("login")}>
+                Logout
+              </button>
             </div>
           </div>
 
@@ -143,8 +228,10 @@ function App() {
           />
 
           <div className="jobs-grid">
+
             {filteredJobs.map((job) => (
               <div className="card" key={job.id}>
+
                 <h3>{job.title}</h3>
                 <p>{job.company}</p>
                 <p>{job.salary}</p>
@@ -153,29 +240,36 @@ function App() {
                 <button onClick={() => applyJob(job.id)}>
                   Apply
                 </button>
+
               </div>
             ))}
+
           </div>
 
         </div>
       )}
 
-      {/* APPLICATIONS */}
+      {/* ================= APPLICATIONS ================= */}
       {page === "applications" && (
         <div className="container">
 
           <div className="topbar">
             <h2>My Applications</h2>
-            <button onClick={() => setPage("jobs")}>Back</button>
+
+            <button onClick={() => setPage("jobs")}>
+              Back
+            </button>
           </div>
 
           <div className="jobs-grid">
+
             {applications.map((job, i) => (
               <div className="card small" key={i}>
                 <h3>{job.title}</h3>
                 <p>{job.company}</p>
               </div>
             ))}
+
           </div>
 
         </div>
